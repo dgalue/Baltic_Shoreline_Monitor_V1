@@ -36,22 +36,27 @@ void task_uplink_entry(void *pvParameters) {
             if (received_gps_reading.isValid) {
                 Serial.printf("  - Lat: %.6f, Lng: %.6f\n", received_gps_reading.latitude, received_gps_reading.longitude);
                 
-                // 1. Format the data into a payload.
-                // We will send the data as a PRIVATE_APP packet. This is the standard
-                // way to send custom application data over the mesh.
-                auto* appPacket = new AppPacket();
-                appPacket->set_portnum(PortNum_PRIVATE_APP);
-                appPacket->set_payload((uint8_t*)&received_gps_reading, sizeof(GpsReading));
-                appPacket->set_destination(BROADCAST_ADDR); // Send to everyone on the mesh
-                appPacket->set_want_ack(false);
+                // 1. Create a mesh packet using the router's allocator.
+                // This ensures the packet has a unique ID and is properly formatted.
+                meshtastic_MeshPacket* meshPacket = router->allocForSending();
+                if (meshPacket) {
+                    // 2. Fill in the packet details.
+                    meshPacket->to = NODENUM_BROADCAST; // Send to everyone on the mesh
+                    meshPacket->decoded.portnum = meshtastic_PortNum_PRIVATE_APP;
+                    meshPacket->decoded.payload.size = sizeof(GpsReading);
+                    memcpy(meshPacket->decoded.payload.bytes, &received_gps_reading, sizeof(GpsReading));
+                    meshPacket->decoded.want_response = false;
 
-                // 2. Send the packet.
-                // The router will take ownership of the packet and delete it after sending.
-                if (router->send(appPacket)) {
-                    Serial.println("  - GPS data sent via Meshtastic.");
+                    // 3. Send the packet.
+                    // The router takes ownership and will free the packet after sending.
+                    ErrorCode result = router->send(meshPacket);
+                    if (result == ERRNO_OK) {
+                        Serial.println("  - GPS data sent via Meshtastic.");
+                    } else {
+                        Serial.printf("  - Failed to send data via Meshtastic. Error: %d\n", result);
+                    }
                 } else {
-                    Serial.println("  - Failed to send data via Meshtastic.");
-                    delete appPacket; // We must delete the packet if the router rejected it.
+                    Serial.println("  - Failed to allocate mesh packet.");
                 }
 
             } else {
