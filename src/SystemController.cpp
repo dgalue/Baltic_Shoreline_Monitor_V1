@@ -63,8 +63,8 @@ void SystemController::initMeshtastic() {
     // The Router constructor will start the necessary background tasks on Core 0.
     router = new Router();
 
-    // We must call begin() on the router to start the radio and other services.
-    router->begin();
+    // Note: Router doesn't have a begin() method. The constructor and the OSThread
+    // framework handle the initialization automatically.
     
     Serial.println("SystemController: Meshtastic initialization complete.");
 }

@@ -2,7 +2,7 @@
 #include "SystemController.h"
 #include "mesh/Router.h"
 #include "mesh/MeshTypes.h"
-#include "mesh/MeshPackets.h"
+#include "meshtastic/mesh.pb.h"
 #include <Arduino.h>
 
 /**
