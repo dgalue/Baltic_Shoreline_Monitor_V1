@@ -46,7 +46,7 @@ path, and pass the individual `.cpp` files explicitly (as in previous revisions)
 ## Detailed Guides
 - [ESP32-S3 Comprehensive Guide](./ESP32-S3_Comprehensive_Guide.md)
 - [Hardware Component Validation Guide](./docs/hardware_component_tests.md)
-- [Meshtastic firmware README](./meshtastic-firmware-2.6.11.60ec05e/README.md)
+- [Meshtastic firmware README](./meshtastic-firmware/README.md)
 - [Meshtastic documentation](https://meshtastic.org/docs/)
 - [FreeRTOS API reference](https://freertos.org)
 
