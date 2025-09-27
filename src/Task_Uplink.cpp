@@ -1,4 +1,8 @@
 #include "SystemContext.h"
+#include "SystemController.h"
+#include "mesh/Router.h"
+#include "mesh/MeshTypes.h"
+#include "mesh/MeshPackets.h"
 #include <Arduino.h>
 
 /**
@@ -15,39 +19,44 @@ void task_uplink_entry(void *pvParameters) {
     SystemContext* context = (SystemContext*)pvParameters;
     Serial.println("Uplink Task: Starting...");
 
-    // TODO: Initialize the Meshtastic API/interface here.
+    // Get a pointer to the router instance
+    Router* router = SystemController::getInstance().getRouter();
+    if (!router) {
+        Serial.println("Uplink Task: FATAL - Router not initialized!");
+        vTaskDelete(NULL); // End this task
+    }
 
     GpsReading received_gps_reading;
 
     for (;;) {
-        // This task can be entirely event-driven. We will block and wait for
-        // a message to appear on the gpsQueue.
-        // The last parameter, portMAX_DELAY, means the task will sleep indefinitely
-        // until a message is available, which is very efficient.
+        // Block and wait for a message to appear on the gpsQueue.
         if (xQueueReceive(context->gpsQueue, &received_gps_reading, portMAX_DELAY) == pdTRUE) {
             Serial.println("Uplink Task: Received GPS reading.");
 
             if (received_gps_reading.isValid) {
                 Serial.printf("  - Lat: %.6f, Lng: %.6f\n", received_gps_reading.latitude, received_gps_reading.longitude);
                 
-                // TODO:
-                // 1. Format the received_gps_reading into a byte buffer suitable for LoRa.
-                //    For example, using Protocol Buffers (protobuf) or a custom struct.
-                //
-                //    Example payload:
-                //    byte payload[16];
-                //    memcpy(payload, &received_gps_reading.latitude, sizeof(double));
-                //    memcpy(payload + sizeof(double), &received_gps_reading.longitude, sizeof(double));
+                // 1. Format the data into a payload.
+                // We will send the data as a PRIVATE_APP packet. This is the standard
+                // way to send custom application data over the mesh.
+                auto* appPacket = new AppPacket();
+                appPacket->set_portnum(PortNum_PRIVATE_APP);
+                appPacket->set_payload((uint8_t*)&received_gps_reading, sizeof(GpsReading));
+                appPacket->set_destination(BROADCAST_ADDR); // Send to everyone on the mesh
+                appPacket->set_want_ack(false);
 
-                // 2. Call the Meshtastic API to send the data.
-                //    meshtastic.sendData(payload, sizeof(payload));
-                
-                Serial.println("  - (Simulating sending data via Meshtastic)");
+                // 2. Send the packet.
+                // The router will take ownership of the packet and delete it after sending.
+                if (router->send(appPacket)) {
+                    Serial.println("  - GPS data sent via Meshtastic.");
+                } else {
+                    Serial.println("  - Failed to send data via Meshtastic.");
+                    delete appPacket; // We must delete the packet if the router rejected it.
+                }
+
             } else {
                 Serial.println("  - Received invalid GPS reading, not sending.");
             }
         }
-        
-        // No delay is needed here because xQueueReceive with portMAX_DELAY handles all the waiting.
     }
 }
