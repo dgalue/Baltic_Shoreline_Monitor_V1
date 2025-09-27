@@ -36,9 +36,9 @@ void SystemController::initContext() {
 
     // Create queues for inter-task communication
     // Arguments: Queue length, size of each item
-    context.gpsQueue = xQueueCreate(10, sizeof(int)); // Placeholder size
-    context.visionQueue = xQueueCreate(5, sizeof(int)); // Placeholder size
-    context.audioQueue = xQueueCreate(20, sizeof(int)); // Placeholder size
+    context.gpsQueue = xQueueCreate(10, sizeof(GpsReading));
+    context.visionQueue = xQueueCreate(5, sizeof(VisionDetection));
+    context.audioQueue = xQueueCreate(20, sizeof(AcousticEvent));
 
     // Create mutexes for shared resources
     context.i2cMutex = xSemaphoreCreateMutex();

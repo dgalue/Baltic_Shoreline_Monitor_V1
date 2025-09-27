@@ -5,11 +5,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
 #include <freertos/semphr.h>
-
-// Forward declarations for complex types
-class GpsReading;
-class VisionDetection;
-class AcousticEvent;
+#include "DataTypes.h"
 
 /**
  * @brief Defines the core data structures and synchronization primitives used across the system.
