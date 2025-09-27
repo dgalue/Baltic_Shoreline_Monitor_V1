@@ -17,22 +17,37 @@ void task_uplink_entry(void *pvParameters) {
 
     // TODO: Initialize the Meshtastic API/interface here.
 
-    for (;;) {
-        // This task can be entirely event-driven, blocking on multiple queues.
-        // A more advanced implementation would use a QueueSet to wait on
-        // gpsQueue, visionQueue, and audioQueue simultaneously.
+    GpsReading received_gps_reading;
 
-        // For now, we'll check one queue as an example.
-        int received_data; // Placeholder for actual data struct
-        if (xQueueReceive(context->visionQueue, &received_data, portMAX_DELAY) == pdTRUE) {
-            Serial.println("Uplink Task: Received vision event. Preparing to send.");
-            
-            // TODO:
-            // 1. Format the received_data into a byte buffer.
-            // 2. Call the Meshtastic API to send the data.
-            //    meshtastic.sendData(buffer, size);
+    for (;;) {
+        // This task can be entirely event-driven. We will block and wait for
+        // a message to appear on the gpsQueue.
+        // The last parameter, portMAX_DELAY, means the task will sleep indefinitely
+        // until a message is available, which is very efficient.
+        if (xQueueReceive(context->gpsQueue, &received_gps_reading, portMAX_DELAY) == pdTRUE) {
+            Serial.println("Uplink Task: Received GPS reading.");
+
+            if (received_gps_reading.isValid) {
+                Serial.printf("  - Lat: %.6f, Lng: %.6f\n", received_gps_reading.latitude, received_gps_reading.longitude);
+                
+                // TODO:
+                // 1. Format the received_gps_reading into a byte buffer suitable for LoRa.
+                //    For example, using Protocol Buffers (protobuf) or a custom struct.
+                //
+                //    Example payload:
+                //    byte payload[16];
+                //    memcpy(payload, &received_gps_reading.latitude, sizeof(double));
+                //    memcpy(payload + sizeof(double), &received_gps_reading.longitude, sizeof(double));
+
+                // 2. Call the Meshtastic API to send the data.
+                //    meshtastic.sendData(payload, sizeof(payload));
+                
+                Serial.println("  - (Simulating sending data via Meshtastic)");
+            } else {
+                Serial.println("  - Received invalid GPS reading, not sending.");
+            }
         }
         
-        // No delay needed here if xQueueReceive blocks indefinitely (portMAX_DELAY)
+        // No delay is needed here because xQueueReceive with portMAX_DELAY handles all the waiting.
     }
 }
