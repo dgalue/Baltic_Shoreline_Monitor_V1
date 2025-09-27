@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+option java_package = "com.geeksville.mesh";
+option java_outer_classname = "BalticShorelineProtos";
+option optimize_for = LITE_RUNTIME;
+option go_package = "github.com/meshtastic/go/generated";
+
+/*
+ * Baltic Shoreline Monitor Data
+ * Custom protobuf message for environmental monitoring data
+ */
+message BalticShorelineData {
+    /*
+     * GPS location data with high precision for marine applications
+     */
+    message GPSReading {
+        double latitude = 1;      // Decimal degrees
+        double longitude = 2;     // Decimal degrees  
+        float altitude = 3;       // Meters above sea level
+        float speed = 4;          // Speed in km/h
+        float course = 5;         // Course in degrees
+        uint32 satellites = 6;    // Number of satellites
+        uint32 timestamp = 7;     // Unix timestamp
+        bool valid = 8;           // GPS fix validity
+    }
+    
+    /*
+     * Hydrophone audio monitoring for marine life detection
+     */
+    message AudioReading {
+        float amplitude_db = 1;       // Sound level in dB
+        float frequency_hz = 2;       // Dominant frequency in Hz
+        uint32 duration_ms = 3;       // Recording duration
+        bool marine_life_detected = 4; // AI detection result
+        float confidence = 5;         // Detection confidence 0.0-1.0
+        uint32 timestamp = 6;         // Unix timestamp
+    }
+    
+    /*
+     * Vision AI analysis for coastal monitoring
+     */
+    message VisionReading {
+        bool debris_detected = 1;     // Floating debris detection
+        bool erosion_detected = 2;    // Coastal erosion detection
+        float water_level_cm = 3;     // Water level measurement
+        float visibility_m = 4;       // Visibility distance
+        uint32 objects_count = 5;     // Number of objects detected
+        float confidence = 6;         // Overall confidence 0.0-1.0
+        uint32 timestamp = 7;         // Unix timestamp
+    }
+    
+    /*
+     * Power and system status
+     */
+    message SystemStatus {
+        float battery_voltage = 1;    // Battery voltage
+        float solar_voltage = 2;      // Solar panel voltage
+        float temperature_c = 3;      // System temperature
+        uint32 uptime_seconds = 4;    // System uptime
+        uint32 free_memory = 5;       // Free heap memory
+        bool sd_card_ok = 6;          // SD card status
+    }
+
+    // Data payload - only populate the readings that are available
+    GPSReading gps = 1;
+    AudioReading audio = 2; 
+    VisionReading vision = 3;
+    SystemStatus system = 4;
+    
+    // Station identifier
+    string station_id = 5;        // Unique identifier for this monitor
+    uint32 sequence_number = 6;   // Incrementing sequence number
+}
